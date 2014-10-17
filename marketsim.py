@@ -125,7 +125,8 @@ def process_stock_orders(ls_symbols, ldt_timestamps, d_data, cash, np_orders):
     portfolio = { "cash" : cash }
     fund = []
         
-    df_close = d_data['actual_close']
+    #df_close = d_data['actual_close']
+    df_close = d_data['close']    # close = adjusted close
 
     # Time stamps for the event range
     for i in range(0, len(df_close.index)):
