@@ -195,6 +195,7 @@ def main():
     print "Average Daily Return of %s : %0.12f" % (stock, bm_avg_daily_rets)
     
     # plot graph
+<<<<<<< HEAD
     #plt.clf()
     #fig = plt.figure()
     #fig.add_subplot(111)
@@ -207,6 +208,10 @@ def main():
     #plt.xlabel('Date')
     #fig.autofmt_xdate(rotation=45)
     #plt.savefig('tutorial3.pdf', format='pdf')
+=======
+    plt.plot(np_fund)
+    plt.show()
+>>>>>>> FETCH_HEAD
     
 if __name__ == '__main__':
     main()
