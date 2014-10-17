@@ -91,6 +91,10 @@ def simulate(startdate, enddate, ls_symbols, allocations):
     # collapse portfolio
     w = np.array(allocations)
     na_price_tp = np.dot(na_price, w.T).reshape(trading_days,1)
+    print "na_price_tp"
+    print na_price_tp
+    
+    
     
     # normalize prices
     na_normalized_price = normalize_data(na_price_tp) 
