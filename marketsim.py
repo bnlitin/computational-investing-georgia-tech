@@ -1,8 +1,8 @@
 '''
 Market Simulator for Computational Investing Class - Georgia Tech
-
 Author: Boris Litinsky
 Date: 10/15/2014
+Description: Given cash, orders in a csv file, generates daily portfolio values
 '''
 
 import pandas as pd
@@ -22,7 +22,7 @@ def get_cmdline_options():
     try:
         cash = float(sys.argv[1])
     except:
-        cash = float(1000000.00)
+        cash = float(50000.00)
         
     try:
         infile = sys.argv[2]
@@ -47,7 +47,9 @@ def read_orders_csvfile(infile):
             orders.append(row[0:6])
     finally:
         f.close()
-    return np.asarray(orders)   
+        
+    sorted_orders = sorted(orders, key=lambda x: dt.datetime.strptime(x[0]+"-"+x[1]+"-"+x[2], '%Y-%m-%d'))    
+    return np.asarray(sorted_orders)   
 
 #open csv file and write out all transactions
 def write_values_csvfile(outfile,fund):
@@ -160,6 +162,7 @@ def main():
     write_values_csvfile(outfile,fund)
     
     print portfolio
+    print "marketsim.py done"
     
 if __name__ == '__main__':
     main()
