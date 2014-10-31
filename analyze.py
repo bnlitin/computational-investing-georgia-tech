@@ -1,6 +1,6 @@
 '''
-Analyze.py for Computational Investing Class - Georgia Tech
-
+File: Analyze.py
+Class: Computational Investing Class - Georgia Tech
 Author: Boris Litinsky
 Date: 10/16/2014
 '''
@@ -36,7 +36,7 @@ def get_cmdline_options():
     return infile,benchmark   
 
 #open csv file and read in all stock orders in a numpy array
-def read_values_csvfile(infile):
+def read_csvfile(infile):
     values = []   
     f = open(infile,"rU")
     try:
@@ -75,12 +75,12 @@ def cumulative_return(na_rets):
     return cumul
   
 # read stock database from Yahoo and return data structure
-def read_stock_database(start,end,ls_symbols):
+def read_stock_database(begin,end,ls_symbols):
     print "read_stock_database"
-    dt_start = dt.datetime(int(start[0]),int(start[1]),int(start[2])) - dt.timedelta(days=3)
+    dt_begin = dt.datetime(int(begin[0]),int(begin[1]),int(begin[2])) - dt.timedelta(days=3)
     dt_end   = dt.datetime(int(end[0]),int(end[1]),int(end[2])) + dt.timedelta(days=1)
 
-    ldt_timestamps = du.getNYSEdays(dt_start, dt_end, dt.timedelta(hours=16))    
+    ldt_timestamps = du.getNYSEdays(dt_begin, dt_end, dt.timedelta(hours=16))    
     
     dataobj = da.DataAccess('Yahoo')
     ls_keys = ['open', 'high', 'low', 'close', 'volume', 'actual_close']
@@ -92,7 +92,7 @@ def read_stock_database(start,end,ls_symbols):
         d_data[s_key] = d_data[s_key].fillna(method='bfill')
         d_data[s_key] = d_data[s_key].fillna(1.0)    
      
-    return dt_start, dt_end, ldt_timestamps, d_data   
+    return dt_begin, dt_end, ldt_timestamps, d_data   
 
 # process benchmark
 def process_benchmark(stock, ldt_timestamps, d_data, np_fund):
@@ -138,7 +138,7 @@ def calc_stats(prices):
 def print_stats():
     # print out status
     print
-    print "Start Date:",dt_start.strftime("%B %d, %Y")
+    print "begin Date:",dt_begin.strftime("%B %d, %Y")
     print "End Date:  ",dt_end.strftime("%B %d, %Y")
     print "Symbols:", ls_symbols
     print "Sharpe Ratio:", sharpe_ratio_tp
@@ -153,16 +153,16 @@ def main():
     infile,benchmark = get_cmdline_options()    
     
     # read values csvfile into a numpy array and get list of stocks traded
-    np_values = read_values_csvfile(infile)    
+    np_values = read_csvfile(infile)    
 
     ls_symbols = [benchmark]
 
-    # determine the earliest and latest start dates
-    start = np_values[0][0:3]
+    # determine the earliest and latest begin dates
+    begin = np_values[0][0:3]
     end   = np_values[-1][0:3]
     
     # read stock database from Yahoo
-    dt_start, dt_end, ldt_timestamps, d_data = read_stock_database(start,end,ls_symbols)    
+    dt_begin, dt_end, ldt_timestamps, d_data = read_stock_database(begin,end,ls_symbols)    
      
     # append benchmark to the fund
     stock = ls_symbols[0]
@@ -180,7 +180,7 @@ def main():
     # print statistics
     print "Details of the Performance of the portfolio :"
 
-    print "Data Range : %s to %s" % (dt_start.strftime("%B %d, %Y"), dt_end.strftime("%B %d, %Y"))
+    print "Data Range : %s to %s" % (dt_begin.strftime("%B %d, %Y"), dt_end.strftime("%B %d, %Y"))
     print
     print "Sharpe Ratio of Fund  : %0.12f" % (tp_sharpe_ratio)
     print "Sharpe Ratio of %s : %0.12f" % (stock, bm_sharpe_ratio)

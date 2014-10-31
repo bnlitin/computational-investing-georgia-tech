@@ -1,7 +1,8 @@
 '''
-Market Simulator for Computational Investing Class - Georgia Tech
+File:  marketsim.py
+Class:  Market Simulator for Computational Investing Class - Georgia Tech
 Author: Boris Litinsky
-Date: 10/15/2014
+Date:   10/15/2014
 Description: Given cash, orders in a csv file, generates daily portfolio values
 '''
 
@@ -18,27 +19,33 @@ import sys
 import csv
 
 # get command line options
-def get_cmdline_options():
+def get_cmdline_options(argv):
+    cash = float(50000.00)
+    infile = "orders.csv"
+    outfile = "values.csv"
+    
     try:
-        cash = float(sys.argv[1])
-    except:
-        cash = float(50000.00)
-        
-    try:
-        infile = sys.argv[2]
-    except:
-        infile = "orders.csv"
-        
-    try:
-        outfile = sys.argv[3]
-    except:
-        outfile = "values.csv"
-
+        opts, args = getopt.getopt(argv,"hc:i:o:",["cash=","infile=","outfile="])        
+    except getopt.GetoptError:
+        print "marketsim.py -c <cash> -i <infile> -o <outfile.csv>" 
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == 'h':
+            print "marketsim.py -c <cash> -i <infile> -o <outfile.csv>"
+            print "marketsim.py -c 500000 -i orders.csv -o values.csv"
+            sys.exit()
+        elif opt in ('-c','--cash'):
+            cash = float(arg)
+        elif opt in ('-i','--infile'):
+            infile = arg
+        elif opt in ('-o','--ofile'):
+            outfile = arg
+            
     print "cmdline options: cash=%d infile=%s outfile=%s" % (cash,infile,outfile)
     return cash,infile,outfile   
 
 #open csv file and read in all stock orders in a numpy array
-def read_orders_csvfile(infile):
+def read_csvfile(infile):
     orders = []   
     f = open(infile,"rU")
     try:
@@ -52,7 +59,7 @@ def read_orders_csvfile(infile):
     return np.asarray(sorted_orders)   
 
 #open csv file and write out all transactions
-def write_values_csvfile(outfile,fund):
+def write_csvfile(outfile,fund):
     f = open(outfile,"wb")
     try:
         writer = csv.writer(f,delimiter=',')
@@ -62,12 +69,12 @@ def write_values_csvfile(outfile,fund):
         f.close()
      
 # read stock database from Yahoo and return data structure
-def read_stock_database(start,end,ls_symbols):
+def read_stock_database(begin,end,ls_symbols):
     print "read_stock_database"
-    dt_start = dt.datetime(int(start[0]),int(start[1]),int(start[2]))
+    dt_begin = dt.datetime(int(begin[0]),int(begin[1]),int(begin[2]))
     dt_end   = dt.datetime(int(end[0]),int(end[1]),int(end[2])) + dt.timedelta(days=1)
 
-    ldt_timestamps = du.getNYSEdays(dt_start, dt_end, dt.timedelta(hours=16))    
+    ldt_timestamps = du.getNYSEdays(dt_begin, dt_end, dt.timedelta(hours=16))    
     
     dataobj = da.DataAccess('Yahoo', cachestalltime=0)
     ls_keys = ['open', 'high', 'low', 'close', 'volume', 'actual_close']
@@ -138,31 +145,31 @@ def process_stock_orders(ls_symbols, ldt_timestamps, d_data, cash, np_orders):
     return portfolio,fund
 
 # main routine    
-def main():
+def main(argv):
     print "marketsim.py main"
     
     # get command line parameters
-    cash,infile,outfile = get_cmdline_options()
+    cash,infile,outfile = get_cmdline_options(argv)
     
     # read orders csvfile into a numpy array and get list of stocks traded
-    np_orders = read_orders_csvfile(infile)
+    np_orders = read_csvfile(infile)
     ls_symbols = set(list(np_orders[:,3]))
 
-    # determine the earliest and latest start dates
-    start = np_orders[0][0:3]
+    # determine the earliest and latest begin dates
+    begin = np_orders[0][0:3]
     end   = np_orders[-1][0:3]
 
     # read stock database from Yahoo
-    ldt_timestamps, d_data = read_stock_database(start,end,ls_symbols)
+    ldt_timestamps, d_data = read_stock_database(begin,end,ls_symbols)
            
     # loop for all NYSE stock days earliest to latest
     portfolio, fund = process_stock_orders(ls_symbols, ldt_timestamps, d_data, cash, np_orders)
 
     # write out csvfile
-    write_values_csvfile(outfile,fund)
+    write_csvfile(outfile,fund)
     
     print portfolio
     print "marketsim.py done"
     
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])

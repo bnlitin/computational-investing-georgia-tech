@@ -2,6 +2,7 @@
 File: bollinger.py
 Class: Computation Investing - Georgia Tech
 Author: Boris Litinsky
+Date: 10/26/2014
 Description: Compute Bollinger Bands
 '''
 
@@ -23,10 +24,10 @@ def get_cmdline_options(argv):
     begin = [2010, 1, 1]
     end = [2010, 12, 31]
     stocks = ['MSFT', 'AAPL']
-    outfile = "bollinger.csv"
+    outfile = "bollinger"
     
     try:
-        opts, args = getopt.getopt(argv,"hb:e:s:o:",["begin=","end=","stock=","ofile="])
+        opts, args = getopt.getopt(argv,"hb:e:s:o:",["begin=","end=","stock=","outfile="])
         
     except getopt.GetoptError:
         print "bollinger.py -b <begin_year> -e <end_year> -s <stocks> -o <outfile.csv>" 
@@ -57,7 +58,7 @@ def get_cmdline_options(argv):
 
 #open csv file and write out all trades
 def write_csvfile(outfile,data):
-    f = open(outfile,"wb")
+    f = open(outfile + ".csv","wb")
     try:
         writer = csv.writer(f,delimiter=',')
         for row in data:

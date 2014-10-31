@@ -2,6 +2,7 @@
 File: find_events.py
 Class: Computation Investing - Georgia Tech
 Author: Boris Litinsky
+Date:  10/1/2014
 Description: Find Financial Events
 '''
 
@@ -35,10 +36,10 @@ nan = no information about any event.
 
 # get command line options
 def get_cmdline_options(argv):    
-    begin = [2008, 1, 1]
-    end   = [2009, 12, 31]
+    begin = [2012, 1, 1]
+    end   = [2013, 12, 31]
     stocks = 'sp5002012'
-    outfile = "events.csv"
+    outfile = "events"
     
     try:
         opts, args = getopt.getopt(argv,"hb:e:s:o:",["begin=","end=","stock=","ofile="])
@@ -72,7 +73,7 @@ def get_cmdline_options(argv):
 
 #open csv file and write out all trades
 def write_csvfile(outfile,data):
-    f = open(outfile,"wb")
+    f = open(outfile + ".csv","wb")
     try:
         writer = csv.writer(f,delimiter=',')
         for row in data:
@@ -107,8 +108,8 @@ def find_events(ls_symbols, d_data):
             # market is up more then 2%
             #if f_symreturn_today <= -0.03 and f_marketreturn_today >= 0.02:
             #    df_events[s_sym].ix[ldt_timestamps[i]] = 1
-            #if f_symprice_today < 5.00 and f_symprice_yest >= 5.00:
-            if (f_symprice_today * 0.90) < f_symprice_yest:
+            if f_symprice_today < 20.00 and f_symprice_yest >= 20.00:
+            #if (f_symprice_today / f_symprice_yest ) < 0.80:
                 events.append([ldt_timestamps[i],s_sym,f_symprice_today])
                 df_events[s_sym].ix[ldt_timestamps[i]] = 1
 
@@ -143,9 +144,10 @@ def main(argv):
     df_events, events = find_events(ls_symbols, d_data)
     write_csvfile(outfile,events)
     
-    print "Creating Study"
+    studyfile = outfile + ".pdf"
+    print "creating study in file:",studyfile
     ep.eventprofiler(df_events, d_data, i_lookback=20, i_lookforward=20,
-                s_filename='Study_7d_sp500_2012.pdf', b_market_neutral=True, b_errorbars=True,
+                s_filename=studyfile, b_market_neutral=True, b_errorbars=True,
                 s_market_sym='SPY')
 
 if __name__ == '__main__':
