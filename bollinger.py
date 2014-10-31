@@ -20,38 +20,40 @@ import csv
 
 # get command line options
 def get_cmdline_options(argv):    
-    start = [2010, 1, 1]
+    begin = [2010, 1, 1]
     end = [2010, 12, 31]
-    symbols = ['MSFT']
+    stocks = ['MSFT', 'AAPL']
     outfile = "bollinger.csv"
     
     try:
-        opts, args = getopt.getopt(argv,"hs:e:l:o:",["start=","end=","list=","ofile="])
+        opts, args = getopt.getopt(argv,"hb:e:s:o:",["begin=","end=","stock=","ofile="])
         
     except getopt.GetoptError:
-        print "bollinger.py -s <start_year> -e <end_year> -l <stocks> -o <outfile.csv>" 
+        print "bollinger.py -b <begin_year> -e <end_year> -s <stocks> -o <outfile.csv>" 
         sys.exit(2)
     for opt, arg in opts:
         if opt == 'h':
-            print "bollinger.py -s <start_year> -e <end_year> -l <stocks> -o <outfile.csv>" 
+            print "bollinger.py -b <begin_year> -e <end_year> -s <stock_list> -o <outfile.csv>"
+            print "bollinger.py -b 2011 -e 2011 -s AAPL,MSFT -o bolligner.csv"
             sys.exit()
-        elif opt in ('-s','--start'):
-            start = [int(arg), 1, 1]
+        elif opt in ('-b','--begin'):
+            begin = [int(arg), 1, 1]
         elif opt in ('-e','--end'):
-            end = [int(arg), 1, 1]
-        elif opt in ('-l','--list'):
-            symbols = str(arg)
+            end = [int(arg), 12, 31]
+        elif opt in ('-s','--stock'):
+            stocks = str(arg)
+            stocks = stocks.split(",")
         elif opt in ('-o','--ofile'):
             outfile = arg
     
-    dt_start = dt.datetime(int(start[0]),int(start[1]),int(start[2])) 
+    dt_begin = dt.datetime(int(begin[0]),int(begin[1]),int(begin[2])) 
     dt_end   = dt.datetime(int(end[0]),int(end[1]),int(end[2]))
     
-    if dt_start > dt_end:
-        print "Error: starting date must be before ending date"
+    if dt_begin > dt_end:
+        print "Error: begining date must be before ending date"
         sys.exit(2)
-    print "cmdline options: start=",dt_start," end=",dt_end,"stocks=",symbols," outfile=",outfile
-    return dt_start,dt_end,symbols,outfile
+    print "cmdline options: begin=",dt_begin," end=",dt_end,"stocks=",stocks," outfile=",outfile
+    return dt_begin,dt_end,stocks,outfile
 
 #open csv file and write out all trades
 def write_csvfile(outfile,data):
@@ -112,12 +114,12 @@ def plot(ldt_timestamps,ls_symbols,d_data):
     plt.savefig('adjustedclose.pdf', format='pdf')    
 
 # read stock database from Yahoo and return data structure
-def read_stock_database(dt_start,dt_end,ls_symbols):
+def read_stock_database(dt_begin,dt_end,ls_symbols):
     print "read_stock_database"
     dt_end +=dt.timedelta(days=1)
 
     dataobj = da.DataAccess('Yahoo', cachestalltime=0)
-    ldt_timestamps = du.getNYSEdays(dt_start, dt_end, dt.timedelta(hours=16))        
+    ldt_timestamps = du.getNYSEdays(dt_begin, dt_end, dt.timedelta(hours=16))        
     ls_keys = ['open', 'high', 'low', 'close', 'volume', 'actual_close']
     ldf_data = dataobj.get_data(ldt_timestamps, ls_symbols, ls_keys)   
     d_data = dict(zip(ls_keys, ldf_data))
@@ -131,14 +133,14 @@ def read_stock_database(dt_start,dt_end,ls_symbols):
 
 def main(argv):
     print "bollinger.py main routine\n"
-    dt_start, dt_end, ls_symbols, outfile = get_cmdline_options(argv)
-    ldt_timestamps, d_data = read_stock_database(dt_start, dt_end,ls_symbols)
+    dt_begin, dt_end, ls_symbols, outfile = get_cmdline_options(argv)
+    ldt_timestamps, d_data = read_stock_database(dt_begin, dt_end,ls_symbols)
   
     bollinger = calc_bollinger(ls_symbols, d_data)
     write_csvfile(outfile,bollinger)
     plot(ldt_timestamps, ls_symbols, d_data)
     
-    print bollinger
+    #print bollinger
     print "bollinger.py main done\n"
     
 
