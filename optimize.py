@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import math
+import itertools as it
 import sys, getopt
 import csv
 
@@ -24,9 +25,10 @@ print "Pandas Version", pd.__version__
 
 # get command line options
 def get_cmdline_options(argv):    
-    begin = [2010, 1, 1]
-    end   = [2010, 12, 31]
-    stocks = ['BRCM','TXN','IBM','HNZ']
+    begin = [2012, 1, 1]
+    end   = [2012, 12, 31]
+    #stocks = ['BRCM','TXN','IBM','HNZ']
+    stocks = ['AAPL','GOOG', 'AMZN']
     
     try:
         opts, args = getopt.getopt(argv,"hb:e:s:",["begin=","end=","stock="])
@@ -111,8 +113,8 @@ def simulate(dt_begin, dt_end, ls_symbols, allocation):
     # collapse portfolio
     w = np.array(allocation)
     na_price_tp = np.dot(na_price, w.T).reshape(trading_days,1)
-    print "na_price_tp"
-    print na_price_tp
+    #print "na_price_tp"
+    #print na_price_tp
     
     # normalize prices
     na_normalized_price = normalize_data(na_price_tp) 
@@ -137,10 +139,10 @@ def simulate(dt_begin, dt_end, ls_symbols, allocation):
     
     # print out status
     print
-    print "Start Date:",dt_start.strftime("%B %d, %Y")
+    print "Start Date:",dt_begin.strftime("%B %d, %Y")
     print "End Date:  ",dt_end.strftime("%B %d, %Y")
     print "Symbols:", ls_symbols
-    print "Optimal Allocations:", allocations
+    print "Allocation:", allocation
     print "Sharpe Ratio:", sharpe_ratio_tp
     print "Volatility (stdev of daily returns):", std_dev_tp 
     print "Average Daily Return:", avg_daily_rets
@@ -149,16 +151,12 @@ def simulate(dt_begin, dt_end, ls_symbols, allocation):
 
 # compute all possible legal portfolio allocations
 def calc_allocations(ls_symbols):    
-    n = len(ls_symbols)
     allocations = []
-    alloc = []
-
-    for count in range(0, (10 ** n) + 1,1):
-        for stock in range(n):
-                alloc[stock] = int(count / (10 ** stock)) % 11 * 0.1
-        if sum(alloc) == 1.0:
-            allocations.append(alloc)
-    print allocations
+    vals = [x*0.1 for x in range(11)]
+    combinations = it.product(vals, repeat=len(ls_symbols))
+    for allocation in combinations:
+        if sum(allocation) == 1.0:
+            allocations.append(allocation)
     return allocations    
     
 def optimize(dt_begin, dt_end, ls_symbols):
