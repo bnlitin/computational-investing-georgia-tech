@@ -97,7 +97,7 @@ def bollinger_trade(ls_symbols, d_data):
         bollinger_lower[s_sym] = rolling_mean[s_sym] - rolling_std[s_sym] 
         bollinger_value[s_sym] = (closing_price[s_sym] - rolling_mean[s_sym]) / rolling_std[s_sym]
  
-    for i in range(1, len(ldt_timestamps)):
+    for i in range(1, len(ldt_timestamps)-5):
         spy_value = bollinger_value['SPY'].ix[ldt_timestamps[i]]
         
         for s_sym in ls_symbols:
@@ -110,9 +110,14 @@ def bollinger_trade(ls_symbols, d_data):
             value = bollinger_value[s_sym].ix[ldt_timestamps[i]]
             value_yest = bollinger_value[s_sym].ix[ldt_timestamps[i-1]]
                         
-            if spy_value >= 1.0 and value <= -2.0 and value_yest >= -2.0:
+            if spy_value >= 1.5 and value < -2.0 and value_yest >= -2.0:
                 buy_trade = place_stock_order(ldt_timestamps[i],s_sym,"Buy",100)
-                sell_trade= place_stock_order(ldt_timestamps[i+5],s_sym,"Sell",100)
+                
+                if (i+5) < len(ldt_timestamps):
+                    sell_date = ldt_timestamps[i+5]
+                else:
+                    sell_date = ldt_timestamps[-1]
+                sell_trade= place_stock_order(sell_date,s_sym,"Sell",100)
                 trades.append(buy_trade)
                 trades.append(sell_trade)                
                          

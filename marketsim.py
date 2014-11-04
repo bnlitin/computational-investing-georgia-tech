@@ -15,7 +15,7 @@ import datetime as dt
 import QSTK.qstkutil.DataAccess as da
 import QSTK.qstkutil.tsutil as tsu
 import QSTK.qstkstudy.EventProfiler as ep
-import sys
+import sys, getopt
 import csv
 
 # get command line options
@@ -144,6 +144,65 @@ def process_stock_orders(ls_symbols, ldt_timestamps, d_data, cash, np_orders):
         fund.append(row)
     return portfolio,fund
 
+# normalize prices
+def normalize_data(prices):
+    return prices / prices[0, :]
+
+# given an array of prices, compute daily return for all stocks
+def daily_return(prices):
+    return tsu.returnize0(prices)
+
+# given daily return and allocations, compute average daily return for portfolio
+def avg_daily_return(daily_rets):
+    avg = daily_rets.mean()
+    return avg
+
+# given an array of prices, compute standard deviation of portfolio
+def std_dev(daily_rets):
+    std = daily_rets.std()
+    return std
+
+def sharpe_ratio(avg_daily_rets, std_dev_tp):
+    k = math.sqrt(252) # for daily returns (assume 252)
+    sharpe = k * avg_daily_rets / std_dev_tp
+    return sharpe
+
+def cumulative_return(na_rets):
+    cumul = float(1 + np.subtract(na_rets[-1], na_rets[0]))
+    return cumul
+
+def calc_stats(begin, end, na_price):        
+    dt_begin = dt.datetime(int(begin[0]),int(begin[1]),int(begin[2])) 
+    dt_end   = dt.datetime(int(end[0]),int(end[1]),int(end[2]))
+    
+    # normalize prices
+    na_normalized_price = normalize_data(na_price) 
+ 
+    # calculate daily return
+    na_rets = na_normalized_price.copy()
+    na_daily_rets = daily_return(na_rets)
+        
+    # average daily return
+    avg_daily_rets = avg_daily_return(na_daily_rets)
+    
+    # compute standard deviation
+    std_dev_tp = std_dev(na_daily_rets)
+    
+    # compute sharpe ratio
+    sharpe_ratio_tp = sharpe_ratio(avg_daily_rets,std_dev_tp)
+    
+    #compute cumulative return
+    cumul_return_tp = cumulative_return(na_normalized_price)
+    
+    # print out status
+    print
+    print "Start Date:",dt_begin,"to",dt_end
+    print "Sharpe Ratio:", sharpe_ratio_tp
+    print "Total Return of Fund:", cumul_return_tp
+    print "Standard Deviation:  ", std_dev_tp 
+    print "Average Daily Return:", avg_daily_rets
+    
+    
 # main routine    
 def main(argv):
     print "marketsim.py main"
@@ -165,6 +224,12 @@ def main(argv):
     # loop for all NYSE stock days earliest to latest
     portfolio, fund = process_stock_orders(ls_symbols, ldt_timestamps, d_data, cash, np_orders)
 
+    # calculate stats
+    na_fund = np.array(fund)
+    trading_days = na_fund.shape[0]
+    na_price = na_fund[:,3].reshape(trading_days,1)
+    calc_stats(begin, end, na_price)
+    
     # write out csvfile
     write_csvfile(outfile,fund)
     
