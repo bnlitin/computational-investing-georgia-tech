@@ -20,9 +20,9 @@ import csv
 
 # get command line options
 def get_cmdline_options(argv):
-    cash = float(50000.00)
-    infile = "orders.csv"
-    outfile = "values.csv"
+    cash = float(100000.00)
+    infile  = "bollinger_trade.csv"
+    outfile = "bollinger_values.csv"
     
     try:
         opts, args = getopt.getopt(argv,"hc:i:o:",["cash=","infile=","outfile="])        

@@ -1,8 +1,8 @@
 '''
-File: bollinger_events.py
+File: bollinger_trade.py
 Class: Computation Investing - Georgia Tech
 Author: Boris Litinsky
-Date: 10/26/2014
+Date: 11/03/2014
 Description: Compute Bollinger Bands and Extract Events
 
 Lookback windows=20
@@ -26,7 +26,7 @@ def get_cmdline_options(argv):
     begin = [2008, 1, 1]
     end   = [2009, 12, 31]
     stocks = 'SP5002012'
-    outfile = "bollinger_events"
+    outfile = "bollinger_trade"
     
     try:
         opts, args = getopt.getopt(argv,"hb:e:s:o:",["begin=","end=","stock=","outfile="])
@@ -68,20 +68,20 @@ def write_csvfile(outfile,data):
     finally:
         f.close()
 
-def calc_bollinger_bands(ls_symbols, d_data):
-    print "calc_bollinger_bands"
+# place stock order
+def place_stock_order(timestamp,stock, order_type, shares): 
+    return [timestamp.year, timestamp.month, timestamp.day, stock, order_type, shares]
+
+def bollinger_trade(ls_symbols, d_data):
+    print "bollinger_trade"
     
     # Finding the event dataframe
     df_close = d_data['close']
 
-    # Creating an empty dataframe
-    df_events = copy.deepcopy(df_close)
-    df_events = df_events * np.NAN
-
     # Time stamps for the event range
     ldt_timestamps = df_close.index
 
-    bollinger = []    
+    trades = []
     closing_price = {}
     rolling_mean = {}
     rolling_std = {}
@@ -110,35 +110,13 @@ def calc_bollinger_bands(ls_symbols, d_data):
             value = bollinger_value[s_sym].ix[ldt_timestamps[i]]
             value_yest = bollinger_value[s_sym].ix[ldt_timestamps[i-1]]
                         
-            if spy_value >= 1.5 and value <= -2.0 and value_yest >= -2.0:
-                event = True
-                df_events[s_sym].ix[ldt_timestamps[i]] = 1
-            else:
-                event = False
-                
-            bollinger.append([date, s_sym, price, mean, std, upper, lower, value, event ])
-            
-    return bollinger, df_events
-
-def find_events(bollinger):
-    print "find_events"
-    events = []
-    
-    for row in bollinger:
-        date, s_sym, price, mean, std, upper, lower, value, event = row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]
-        if event == True:
-            events.append([date, s_sym, price, mean, std, upper, lower, value, event ])
-            print "event",date, s_sym, price, mean, std, upper, lower, value, event
-    return events
-        
-def plot(ldt_timestamps,ls_symbols,d_data):
-    na_price = d_data['close'].values
-    plt.clf()
-    plt.plot(ldt_timestamps, na_price)
-    plt.legend(ls_symbols)
-    plt.ylabel('Adjusted Close')
-    plt.xlabel('Date')
-    plt.savefig('adjustedclose.pdf', format='pdf')    
+            if spy_value >= 1.0 and value <= -2.0 and value_yest >= -2.0:
+                buy_trade = place_stock_order(ldt_timestamps[i],s_sym,"Buy",100)
+                sell_trade= place_stock_order(ldt_timestamps[i+5],s_sym,"Sell",100)
+                trades.append(buy_trade)
+                trades.append(sell_trade)                
+                         
+    return trades
 
 # read stock database from Yahoo and return data structure
 def read_stock_database(dt_begin,dt_end,stocks):
@@ -163,25 +141,13 @@ def read_stock_database(dt_begin,dt_end,stocks):
     return ldt_timestamps, ls_symbols, d_data   
 
 def main(argv):
-    print "bollinger_events.py main routine\n"
+    print "bollinger_trade.py main routine\n"
     dt_begin, dt_end, stocks, outfile = get_cmdline_options(argv)
     ldt_timestamps, ls_symbols, d_data = read_stock_database(dt_begin, dt_end, stocks)
   
-    bollinger, df_events = calc_bollinger_bands(ls_symbols, d_data)
-    events = find_events(bollinger)
-    write_csvfile(outfile,events)
-    #plot(ldt_timestamps, ls_symbols, d_data)
-    
-    print "total events=",len(events)
-    print "bollinger_events.py main done\n"
-    
-    studyfile = outfile + ".pdf"
-    print "creating study in file:",studyfile
-    ep.eventprofiler(df_events, d_data, i_lookback=20, i_lookforward=20,
-                s_filename=studyfile, b_market_neutral=True, b_errorbars=True,
-                s_market_sym='SPY')
-    
-    
+    trades = bollinger_trade(ls_symbols, d_data)
+    write_csvfile(outfile,trades)
+        
 
 if __name__ == '__main__':
     main(sys.argv[1:])
